@@ -1,37 +1,42 @@
-<!doctype html>
+# 2) templates/index.html (full file)
+cat > templates/index.html <<'HTML'
+<!DOCTYPE html>
 <html lang="kn">
 <head>
-  <meta charset="utf-8">
-  <title>ikan</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ಕನ್ನಡ ಪದಕೋಶ</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <main>
-    <h1>ikan: ಕನ್ನಡ ಪದಗಳು</h1>
+    <h1>🙏 ನನ್ನ ಕನ್ನಡ ಪದಕೋಶ</h1>
+    <p>ಒಟ್ಟು ಪದಗಳು: <strong>{{ count }}</strong></p>
 
-    <form action="/" method="get">
-      <input type="text" name="q" placeholder="ಪದ ಹುಡುಕಿ" value="{{ request.args.get('q','') }}">
-      <button type="submit">🔍 ಹುಡುಕಿ</button>
+    <form method="POST">
+      <label>ತಮ್ಮ ಪದವನ್ನು ನಮೂದಿಸಿ:</label><br>
+      <input type="text" name="word" placeholder="ಪದ ಇಲ್ಲಿ ಬರೆಯಿರಿ">
+      <div class="buttons">
+        <button type="submit">ಪರಿಶೀಲಿಸಿ</button>
+        <button type="submit" name="add">ಸೇರಿಸಿ</button>
+      </div>
     </form>
 
-    <p>
+    <p>{{ message }}</p>
+
+    {% if not_found_word %}
+    <!-- One-click add for the last missing word -->
+    <form method="POST" style="margin-top:8px;">
+      <input type="hidden" name="word" value="{{ not_found_word }}">
+      <button type="submit" name="add">‘{{ not_found_word }}’ ಸೇರಿಸಿ</button>
+    </form>
+    {% endif %}
+     <!-- New link to Dwipadi generator -->
+    <p style="margin-top: 1em;">
       <a href="{{ url_for('dwipadi') }}">➡️ ದ್ವಿಪದಿ ರಚನೆ (Haiku Generator)</a>
     </p>
 
-    {% if words %}
-      <h2>ಪದಗಳು</h2>
-      <ul>
-        {% for w in words %}
-          <li>{{ w.text }}</li>
-        {% endfor %}
-      </ul>
-    {% elif request.args.get('q') %}
-      <p>ಯಾವುದೂ ಸಿಗಲಿಲ್ಲ.</p>
-      <form method="post" action="/">
-        <input type="hidden" name="word" value="{{ request.args.get('q') }}">
-        <button type="submit">ಸೇರಿಸಿ</button>
-      </form>
-    {% endif %}
   </main>
 </body>
 </html>
+HTML
