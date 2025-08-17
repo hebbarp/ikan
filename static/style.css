@@ -1,15 +1,33 @@
 body {
-  font-family: 'Noto Sans Kannada', sans-serif;
-  background: #f9f9f9;
-  color: #333;
+  font-family: sans-serif;
+  background: #fafafa;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+main {
+  max-width: 600px;
+  width: 100%;
+  margin-top: 50px;
   padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  text-align: center;
 }
 
-h1 {
-  color: #006699;
+form {
+  margin-top: 20px;
+  display: inline-block;
 }
 
-input, button {
-  padding: 8px;
-  margin: 5px 0;
+.buttons {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
