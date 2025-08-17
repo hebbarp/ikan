@@ -1,6 +1,9 @@
 import os
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
+from prosody import maatra_count
+from generator import generate_dwipadi
 
 def normalize_db_url(url: str) -> str:
     return url.replace("postgres://", "postgresql://", 1) if url and url.startswith("postgres://") else url
@@ -19,7 +22,14 @@ class Word(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(100), unique=True, nullable=False)
 
-# ensure table exists under gunicorn too
+class Dwipadi(db.Model):
+    __tablename__ = "dwipadi"
+    id = db.Column(db.Integer, primary_key=True)
+    line1 = db.Column(db.Text, nullable=False)
+    line2 = db.Column(db.Text, nullable=False)
+    score = db.Column(db.Float)
+
+# Ensure tables exist under gunicorn too
 with app.app_context():
     db.create_all()
 
@@ -29,10 +39,7 @@ def index():
     not_found_word = None
 
     if request.method == "POST":
-        # main input (may be empty if user presses Add after a failed lookup)
         word = request.form.get("word", "").strip()
-
-        # if user clicked Add with empty input, reuse the last missing word
         if "add" in request.form and not word:
             word = (session.get("last_not_found") or "").strip()
 
@@ -49,7 +56,6 @@ def index():
                     message = f"✨ ಪದ '{word}' ಸೇರಿಸಲ್ಪಟ್ಟಿದೆ."
                     session.pop("last_not_found", None)
             else:
-                # not found on a normal check → remember for one-click add
                 session["last_not_found"] = word
                 not_found_word = word
                 message = f"❌ ಪದ '{word}' ಪದಕೋಶದಲ್ಲಿಲ್ಲ. ಸೇರಿಸಬೇಕೇ?"
@@ -63,6 +69,41 @@ def index():
         count=words_count,
         not_found_word=session.get("last_not_found")
     )
+
+@app.route("/dwipadi", methods=["GET", "POST"])
+def dwipadi():
+    results = []
+    saved_msg = ""
+    target = int(request.args.get("target", 12))
+
+    if request.method == "POST":
+        if "generate" in request.form:
+            # pull words from DB
+            rows = db.session.execute(text("SELECT text FROM word")).fetchall()
+            words = [r[0] for r in rows]
+            results = generate_dwipadi(words, target=target, k=5, seed=42)
+        elif "save" in request.form:
+            l1 = request.form.get("l1","").strip()
+            l2 = request.form.get("l2","").strip()
+            score = float(request.form.get("score","0") or 0)
+            if l1 and l2:
+                db.session.add(Dwipadi(line1=l1, line2=l2, score=score))
+                db.session.commit()
+                saved_msg = "💾 ಉಳಿಸಲಾಗಿದೆ!"
+        # fall through to render
+
+    # show last 10 saved for inspiration
+    recent = Dwipadi.query.order_by(Dwipadi.id.desc()).limit(10).all()
+    return render_template("dwipadi.html",
+                           target=target,
+                           results=results,
+                           recent=recent,
+                           saved_msg=saved_msg)
+
+@app.get("/health")
+def health():
+    db.session.execute(text("SELECT 1"))
+    return "ok", 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))

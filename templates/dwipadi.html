@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ದ್ವಿಪದಿ ಜನರೇಟರ್</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .pair { margin: 12px auto; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; max-width: 640px; }
+    .l { margin: 4px 0; font-size: 1.1rem; }
+    .score { font-size: .9rem; color: #64748b; }
+    .actions { margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>✍️ ದ್ವಿಪದಿ ಜನರೇಟರ್</h1>
+    {% if saved_msg %}<p>{{ saved_msg }}</p>{% endif %}
+
+    <form method="POST">
+      <label>ಗುರಿ ಮಾತ್ರೆಗಳು (ಪ್ರತಿ ಸಾಲಿಗೆ):</label><br>
+      <input type="number" name="target" value="{{ target }}" min="6" max="20" />
+      <div class="buttons">
+        <button type="submit" name="generate">Generate</button>
+      </div>
+    </form>
+
+    {% if results %}
+      <h3 style="margin-top:20px;">ಟಾಪ್ ಫಲಿತಾಂಶಗಳು</h3>
+      {% for s,l1,l2 in results %}
+        <div class="pair">
+          <div class="l">{{ l1 }}</div>
+          <div class="l">{{ l2 }}</div>
+          <div class="score">Score: {{ '%.3f'|format(s) }}</div>
+          <form method="POST" class="actions">
+            <input type="hidden" name="l1" value="{{ l1 }}">
+            <input type="hidden" name="l2" value="{{ l2 }}">
+            <input type="hidden" name="score" value="{{ s }}">
+            <button type="submit" name="save">Save</button>
+          </form>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% if recent %}
+      <h3 style="margin-top:20px;">ಇತ್ತಿಚಿನ ಉಳಿಸಿದ ದ್ವಿಪದಿಗಳು</h3>
+      {% for p in recent %}
+        <div class="pair">
+          <div class="l">{{ p.line1 }}</div>
+          <div class="l">{{ p.line2 }}</div>
+          <div class="score">Score: {{ '%.3f'|format(p.score or 0) }}</div>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <p style="margin-top:20px;"><a href="{{ url_for('index') }}">← ಪದಕೋಶಕ್ಕೆ ಹಿಂತಿರುಗಿ</a></p>
+  </main>
+</body>
+</html>
