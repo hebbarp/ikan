@@ -1,0 +1,15 @@
+body {
+  font-family: 'Noto Sans Kannada', sans-serif;
+  background: #f9f9f9;
+  color: #333;
+  padding: 20px;
+}
+
+h1 {
+  color: #006699;
+}
+
+input, button {
+  padding: 8px;
+  margin: 5px 0;
+}
