@@ -39,17 +39,25 @@ def score_couple(l1: str, l2: str, target:int=12) -> float:
     # tiny bonus if different last akshara but same vowel class already accounted in rhyme
     return 0.7*prosody + 0.3*rhyme
 
-def generate_dwipadi(words: List[str], target:int=12, k:int=5, seed:int=42):
-    random.seed(seed)
+def generate_dwipadi(words: list, target:int=12, k:int=5, seed:int|None=None):
+  
+    # If a seed is provided, use it; otherwise let RNG vary naturally
+    if seed is not None:
+        import random
+        random.seed(seed)
+
     # prefilter super-short/long words (coarse)
     filtered = [w for w in words if 1 <= maatra_count(w) <= 6 and len(w) <= 12]
     if not filtered:
         return []
 
-    # candidate lines
+    # Shuffle once to diversify beams run-to-run
+    import random
+    random.shuffle(filtered)
     L1 = assemble_line(filtered, target=target)
     results = []
     for l1, _ in L1[:20]:
+        random.shuffle(filtered)
         L2 = assemble_line(filtered, target=target)
         # pick those that rhyme with l1
         L2.sort(key=lambda x: abs(target - x[1]))
@@ -73,3 +81,4 @@ def generate_dwipadi(words: List[str], target:int=12, k:int=5, seed:int=42):
         out.append((s,l1,l2))
         if len(out)>=k: break
     return out
+t
