@@ -2,20 +2,33 @@
 <html lang="kn">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ಕನ್ನಡ ಪದಕೋಶ</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <h1>🙏 ನನ್ನ ಕನ್ನಡ ಪದಕೋಶ</h1>
-  <p>ಒಟ್ಟು ಪದಗಳು: {{ count }}</p>
-  
-  <form method="POST">
-    <label>ತಮ್ಮ ಪದವನ್ನು ನಮೂದಿಸಿ:</label><br>
-    <input type="text" name="word" required>
-    <button type="submit">ಪರಿಶೀಲಿಸಿ</button>
-    <button type="submit" name="add">ಸೇರಿಸಿ</button>
-  </form>
-  
-  <p>{{ message }}</p>
+  <main>
+    <h1>🙏 ನನ್ನ ಕನ್ನಡ ಪದಕೋಶ</h1>
+    <p>ಒಟ್ಟು ಪದಗಳು: <strong>{{ count }}</strong></p>
+
+    <form method="POST">
+      <label>ತಮ್ಮ ಪದವನ್ನು ನಮೂದಿಸಿ:</label><br>
+      <input type="text" name="word" placeholder="ಪದ ಇಲ್ಲಿ ಬರೆಯಿರಿ">
+      <div class="buttons">
+        <button type="submit">ಪರಿಶೀಲಿಸಿ</button>
+        <button type="submit" name="add">ಸೇರಿಸಿ</button>
+      </div>
+    </form>
+
+    <p>{{ message }}</p>
+
+    {% if not_found_word %}
+    <!-- One-click add for the last missing word -->
+    <form method="POST" style="margin-top:8px;">
+      <input type="hidden" name="word" value="{{ not_found_word }}">
+      <button type="submit" name="add">‘{{ not_found_word }}’ ಸೇರಿಸಿ</button>
+    </form>
+    {% endif %}
+  </main>
 </body>
 </html>
