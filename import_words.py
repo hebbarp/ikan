@@ -1,7 +1,6 @@
 # import_words.py
 import os
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, text
 
 def normalize_db_url(url: str) -> str:
     return url.replace("postgres://", "postgresql://", 1) if url and url.startswith("postgres://") else url
@@ -12,7 +11,7 @@ PADAGALU_PATH = os.getenv("PADAGALU_PATH", "padagalu.txt")
 engine = create_engine(DB_URL, future=True)
 metadata = MetaData()
 
-# Table name matches your app's model: __tablename__ = "word"
+# Table name matches app: __tablename__ = "word"
 word = Table(
     "word",
     metadata,
@@ -31,22 +30,31 @@ def load_words(path=PADAGALU_PATH):
         return [w.strip() for w in f if w.strip()]
 
 def insert_words(words):
+    dialect = engine.dialect.name  # 'sqlite', 'postgresql', etc.
+    if dialect == "sqlite":
+        upsert_sql = text("INSERT OR IGNORE INTO word(text) VALUES (:t)")
+    else:  # assume PostgreSQL
+        upsert_sql = text("INSERT INTO word(text) VALUES (:t) ON CONFLICT (text) DO NOTHING")
+
     inserted = 0
     with engine.begin() as conn:
         for w in words:
             try:
-                conn.execute(word.insert().values(text=w))
-                inserted += 1
-            except IntegrityError:
-                # duplicate; skip
-                conn.rollback()  # safe to call in begin(); resets failed SAVEPOINT
+                conn.execute(upsert_sql, {"t": w})
+                inserted += 1  # counts attempts; duplicates are ignored silently
             except Exception as e:
+                # Do NOT call conn.rollback() inside 'begin()' block.
+                # Just skip and continue.
                 print(f"[skip] '{w}': {e}")
-    print(f"[done] attempted inserts: {len(words)}, new rows: {inserted}")
+                continue
+    # Show total rows
+    with engine.connect() as conn:
+        total = conn.execute(text("SELECT COUNT(*) FROM word")).scalar_one()
+    print(f"[done] attempted: {len(words)}, total rows now: {total}")
 
 if __name__ == "__main__":
     print(f"[info] DB = {DB_URL}")
     create_schema()
     ws = load_words()
-    print(f"[info] found {len(ws)} words in padagalu.txt")
+    print(f"[info] found {len(ws)} words in {PADAGALU_PATH}")
     insert_words(ws)
