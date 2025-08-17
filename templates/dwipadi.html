@@ -22,6 +22,7 @@
       <input type="number" name="target" value="{{ target }}" min="6" max="20" />
       <div class="buttons">
         <button type="submit" name="generate">Generate</button>
+        <button type="submit" name="regenerate">Regenerate</button>
       </div>
     </form>
 
@@ -33,6 +34,7 @@
           <div class="l">{{ l2 }}</div>
           <div class="score">Score: {{ '%.3f'|format(s) }}</div>
           <form method="POST" class="actions">
+            <input type="hidden" name="target" value="{{ target }}">
             <input type="hidden" name="l1" value="{{ l1 }}">
             <input type="hidden" name="l2" value="{{ l2 }}">
             <input type="hidden" name="score" value="{{ s }}">

@@ -74,9 +74,8 @@ def index():
 def dwipadi():
     results = []
     saved_msg = ""
-    # read from querystring on GET, but from form on POST
+    # read target from GET or POST
     target = 12
-    from flask import request
     if request.method == "GET":
         try:
             target = int(request.args.get("target", target))
@@ -89,12 +88,11 @@ def dwipadi():
             target = 12
 
     if request.method == "POST":
-        if "generate" in request.form:
+        if "generate" in request.form or "regenerate" in request.form:
             # pull words from DB
-            from sqlalchemy import text
             rows = db.session.execute(text("SELECT text FROM word")).fetchall()
             words = [r[0] for r in rows]
-            # Vary the seed each request for fresh results
+            # fresh seed every time for variety
             from time import time_ns
             results = generate_dwipadi(words, target=target, k=5, seed=(time_ns() & 0xFFFF))
         elif "save" in request.form:
@@ -113,6 +111,7 @@ def dwipadi():
                            results=results,
                            recent=recent,
                            saved_msg=saved_msg)
+
 @app.get("/health")
 def health():
     db.session.execute(text("SELECT 1"))
